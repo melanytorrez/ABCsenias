@@ -1,0 +1,20 @@
+# Ignorar entornos virtuales
+.venv*/
+venv/
+ENV/
+
+# Ignorar datasets y modelos generados
+data/
+models/
+*.joblib
+*.csv
+
+# Archivos de Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Configuración local de VS Code / sistema operativo
+.vscode/
+.DS_Store
+Thumbs.db
