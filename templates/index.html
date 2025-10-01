@@ -1,0 +1,131 @@
+<!-- templates/index.html -->
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- El nuevo título del proyecto -->
+    <title>OpenHands - Reconocimiento de Señas</title>
+    <!-- Incluimos la librería de Socket.IO -->
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+            padding: 20px;
+            background-color: #eef1f5;
+            color: #2c3e50;
+            height: 100vh;
+            box-sizing: border-box;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            color: #1e3a5f;
+            margin-bottom: 20px;
+        }
+
+        .main-container {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 30px;
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        .video-container {
+            border: 5px solid #bdc3c7;
+            border-radius: 12px;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+            overflow: hidden;
+            background-color: #000;
+            flex-shrink: 0; /* Evita que el video se encoja */
+        }
+        
+        .text-container {
+            background-color: #ffffff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            width: 40%;
+            min-height: 480px; /* Misma altura que el video */
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+            box-sizing: border-box;
+        }
+
+        .text-container h2 {
+            margin-top: 0;
+            color: #34495e;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 10px;
+        }
+
+        #recognized-text {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 1.5rem;
+            line-height: 1.6;
+            color: #2c3e50;
+            white-space: pre-wrap; /* Permite que el texto se ajuste */
+            word-wrap: break-word;
+        }
+        
+        /* Simula un cursor parpadeante */
+        .cursor {
+            display: inline-block;
+            width: 10px;
+            height: 1.5rem;
+            background-color: #3498db;
+            animation: blink 1s step-end infinite;
+        }
+
+        @keyframes blink {
+            from, to { background-color: transparent; }
+            50% { background-color: #3498db; }
+        }
+
+    </style>
+</head>
+<body>
+    <header>
+        <h1>OpenHands</h1>
+    </header>
+
+    <div class="main-container">
+        <div class="video-container">
+            <!-- La etiqueta img sigue mostrando el stream de video -->
+            <img src="{{ url_for('video_feed') }}" width="640" height="480">
+        </div>
+        <div class="text-container">
+            <h2>Texto Reconocido</h2>
+            <div id="recognized-text"><span class="cursor"></span></div>
+        </div>
+    </div>
+
+    <script>
+        // Conectarse al servidor a través de WebSocket
+        const socket = io();
+
+        // Obtener el elemento donde mostraremos el texto
+        const recognizedTextElement = document.getElementById('recognized-text');
+
+        // Escuchar el evento 'update_text' que envía el servidor
+        socket.on('update_text', function(data) {
+            // Actualizar el contenido del div con el texto recibido
+            // y mantener el cursor al final.
+            recognizedTextElement.innerHTML = data.text + '<span class="cursor"></span>';
+        });
+
+        // Opcional: Manejar la conexión inicial
+        socket.on('connect', function() {
+            console.log('Conectado al servidor WebSocket');
+        });
+    </script>
+
+</body>
+</html>
