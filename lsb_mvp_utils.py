@@ -1,21 +1,17 @@
+# lsb_mvp_utils.py (Versión Corregida sin Carga de Modelos)
+
 import cv2
 import mediapipe as mp
 import numpy as np
 from collections import deque
-import joblib
 from pathlib import Path
 
+# --- Configuración Base ---
 mp_hands = mp.solutions.hands
 mp_drawing = mp.solutions.drawing_utils
-MODEL_PATH = Path("models/lsb_alpha.joblib")
-MODEL_SEQ_PATH = Path("models/lsb_seq.joblib")
 SEQ_LEN = 20
 
-bundle_static = joblib.load(MODEL_PATH)
-clf_static = bundle_static["pipeline"]
-bundle_seq = joblib.load(MODEL_SEQ_PATH)
-clf_seq = bundle_seq["pipeline"]
-
+# --- Clases y Funciones de Procesamiento ---
 class SequenceBuffer:
     def __init__(self, maxlen=SEQ_LEN):
         self.frames = deque(maxlen=maxlen)
@@ -40,16 +36,18 @@ def motion_score(prev_feats, curr_feats):
     if prev_feats is None or curr_feats is None: return 0.0
     return np.linalg.norm(curr_feats - prev_feats)
 
-def process_frame(frame, buffer, prev_feats, motion_hist):
+# --- Función Principal de Reconocimiento ---
+# <<--- CAMBIO CLAVE: Recibe clf_static y clf_seq como parámetros
+def process_frame(frame, buffer, prev_feats, motion_hist, clf_static, clf_seq):
     rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     msg = ""
     feats = None
-    hand_detected = False 
+    hand_detected = False
 
     with mp_hands.Hands(max_num_hands=1, min_detection_confidence=0.6) as hands:
         res = hands.process(rgb)
         if res.multi_hand_landmarks:
-            hand_detected = True 
+            hand_detected = True
             mp_drawing.draw_landmarks(frame, res.multi_hand_landmarks[0], mp_hands.HAND_CONNECTIONS)
             feats = landmarks_to_features(res.multi_hand_landmarks[0].landmark)
             

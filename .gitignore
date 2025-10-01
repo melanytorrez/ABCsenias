@@ -4,10 +4,10 @@ venv/
 ENV/
 
 # Ignorar datasets y modelos generados
-data/
-models/
-*.joblib
-*.csv
+#data/
+#models/
+#*.joblib
+#*.csv
 
 # Archivos de Python
 __pycache__/
