@@ -1,4 +1,3 @@
-# app.py (Versión Final Definitiva con Inicialización Perezosa de la Cámara)
 
 from flask import Flask, render_template, Response
 from flask_socketio import SocketIO
@@ -12,8 +11,6 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
 socketio = SocketIO(app)
 
-# --- Variables Globales y Sincronización ---
-# <<--- CAMBIO CLAVE: No inicializamos la cámara aquí.
 cap = None
 buffer = utils.SequenceBuffer()
 prev_feats = None
@@ -26,19 +23,20 @@ latest_frame = None
 current_sentence = []
 last_added_letter = None
 last_hand_seen_time = time.time()
-SPACE_TIMEOUT = 4.0
+last_letter_add_time = 0  
+SPACE_TIMEOUT = 5.0
+LETTER_COOLDOWN = 3.0    
 
 def background_thread():
     """El 'cerebro' de la aplicación. Se ejecuta en segundo plano."""
     global cap, prev_feats, motion_hist, buffer, latest_frame
-    global current_sentence, last_added_letter, last_hand_seen_time
+    global current_sentence, last_added_letter, last_hand_seen_time, last_letter_add_time
     
-    # <<--- CAMBIO CLAVE: Inicializamos la cámara aquí, dentro del hilo.
     if cap is None:
         cap = cv2.VideoCapture(0)
         if not cap.isOpened():
-            print("Error: No se pudo abrir la cámara. El hilo de fondo no se puede iniciar.")
-            return # Detiene la ejecución del hilo si la cámara falla.
+            print("Error: No se pudo abrir la cámara.")
+            return
 
     print("Iniciando hilo de fondo...")
     while True:
@@ -56,12 +54,18 @@ def background_thread():
 
         if hand_detected:
             last_hand_seen_time = time.time()
-            if msg and len(msg.split(' ')) > 1:
-                predicted_letter = msg.split(' ')[1]
-                if predicted_letter != last_added_letter:
-                    current_sentence.append(predicted_letter)
-                    last_added_letter = predicted_letter
-                    socketio.emit('update_text', {'text': "".join(current_sentence)})
+            
+           
+            if (time.time() - last_letter_add_time) > LETTER_COOLDOWN:
+                if msg and len(msg.split(' ')) > 1:
+                    predicted_letter = msg.split(' ')[1]
+                    if predicted_letter != last_added_letter:
+                        current_sentence.append(predicted_letter)
+                        last_added_letter = predicted_letter
+                        
+                        last_letter_add_time = time.time()
+                        
+                        socketio.emit('update_text', {'text': "".join(current_sentence)})
         else:
             if (time.time() - last_hand_seen_time) > SPACE_TIMEOUT:
                 if current_sentence and current_sentence[-1] != ' ':
@@ -69,6 +73,9 @@ def background_thread():
                     last_added_letter = ' '
                     socketio.emit('update_text', {'text': "".join(current_sentence)})
                     last_hand_seen_time = time.time()
+
+                    last_letter_add_time = 0
+            
             if last_added_letter is not None and last_added_letter != ' ':
                 last_added_letter = None
         
@@ -78,7 +85,6 @@ def background_thread():
         socketio.sleep(0.05)
 
 def generate_frames():
-    """Los 'ojos' de la aplicación. Solo sirve el video."""
     global latest_frame
     while True:
         with thread_lock:

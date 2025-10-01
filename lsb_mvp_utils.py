@@ -5,7 +5,6 @@ from collections import deque
 import joblib
 from pathlib import Path
 
-# --- Configuración y Carga de Modelos ---
 mp_hands = mp.solutions.hands
 mp_drawing = mp.solutions.drawing_utils
 MODEL_PATH = Path("models/lsb_alpha.joblib")
@@ -17,7 +16,6 @@ clf_static = bundle_static["pipeline"]
 bundle_seq = joblib.load(MODEL_SEQ_PATH)
 clf_seq = bundle_seq["pipeline"]
 
-# --- Clases y Funciones de Procesamiento ---
 class SequenceBuffer:
     def __init__(self, maxlen=SEQ_LEN):
         self.frames = deque(maxlen=maxlen)
@@ -42,17 +40,16 @@ def motion_score(prev_feats, curr_feats):
     if prev_feats is None or curr_feats is None: return 0.0
     return np.linalg.norm(curr_feats - prev_feats)
 
-# --- Función Principal de Reconocimiento ---
 def process_frame(frame, buffer, prev_feats, motion_hist):
     rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     msg = ""
     feats = None
-    hand_detected = False # <<--- NUEVO: Variable de estado
+    hand_detected = False 
 
     with mp_hands.Hands(max_num_hands=1, min_detection_confidence=0.6) as hands:
         res = hands.process(rgb)
         if res.multi_hand_landmarks:
-            hand_detected = True # <<--- NUEVO: Se actualiza si hay mano
+            hand_detected = True 
             mp_drawing.draw_landmarks(frame, res.multi_hand_landmarks[0], mp_hands.HAND_CONNECTIONS)
             feats = landmarks_to_features(res.multi_hand_landmarks[0].landmark)
             
@@ -78,5 +75,4 @@ def process_frame(frame, buffer, prev_feats, motion_hist):
                 conf = np.max(proba)
                 msg = f"[E] {pred} ({conf:.2f})"
     
-    # <<--- NUEVO: Se devuelve el estado de detección de la mano
     return frame, msg, feats, hand_detected
