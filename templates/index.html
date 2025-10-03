@@ -8,16 +8,34 @@
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 </head>
 <body>
-    <header>
-        <h1>OpenHands</h1>
-    </header>
+    {% include 'components/navbar.html' %}
     <div class="main-container">
         <div class="video-container">
             <img src="{{ url_for('video_feed') }}" width="640" height="480">
         </div>
-        <div class="text-container">
-            <h2>Texto Reconocido</h2>
-            <div id="recognized-text"><span class="cursor"></span></div>
+        <div class="right-panel">
+            <div class="translation-header">
+                <h2>Traducción en tiempo real</h2>
+                <p>El texto aparecerá aquí mientras realizas las señas</p>
+            </div>
+            <div class="text-container">
+                <div id="recognized-text"><span class="cursor"></span></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="status-bar-container">
+        <div class="status-text">
+            <span class="status-indicator"></span>
+            Listo para traducir
+        </div>
+        <div class="actions">
+            <div class="button instruction-button">
+                Mantén las manos visibles en la cámara
+            </div>
+            <button class="button clear-button" id="clear-text">
+                Limpiar texto
+            </button>
         </div>
     </div>
     <script src="{{ url_for('static', filename='app.js') }}"></script>

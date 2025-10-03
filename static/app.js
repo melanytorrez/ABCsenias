@@ -1,4 +1,3 @@
-// Conectarse al servidor WebSocket
 const socket = io();
 
 // Elemento donde mostramos el texto
@@ -12,4 +11,9 @@ socket.on('update_text', function(data) {
 // Evento de conexión
 socket.on('connect', function() {
     console.log('Conectado al servidor WebSocket');
+});
+
+// Limpiar texto al presionar el botón
+document.getElementById('clear-text').addEventListener('click', () => {
+    recognizedTextElement.innerHTML = '<span class="cursor"></span>';
 });
