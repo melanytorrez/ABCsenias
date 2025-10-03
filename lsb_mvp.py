@@ -6,6 +6,7 @@ from pathlib import Path
 import sys
 import time
 
+
 import cv2
 import pandas as pd
 from sklearn.model_selection import train_test_split
@@ -14,6 +15,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
 from sklearn.metrics import classification_report, accuracy_score
 import joblib
+import numpy as np
 
 # Importamos la lógica compartida desde nuestro nuevo archivo de utilidades
 import lsb_mvp_utils as utils
