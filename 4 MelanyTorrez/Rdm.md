@@ -1,0 +1,27 @@
+En caso de que el plan de hablar contigo en persona haya fallado o no te haya encontrado, se me ocurrió un plan B que consiste en enviarte una carta de la manera más sistemática posible jajaja. Esta no será cursi... o al menos trataré de que no lo sea :v
+
+Ya pasó un buen rato desde que dejamos de hablar, vernos o interactuar, y estoy seguro de que hoy por hoy, tanto para ti como para mí, volver a hablar de algún tema que no esté relacionado con nuestro hijo es altamente improbable. Eso es algo que quiero cambiar, porque no puedo estar tranquilo sabiendo que nuestra situación no está en los mejores términos.
+
+Estos últimos meses pasaron varias cosas que me hicieron reflexionar mucho sobre la familia, las amistades y las relaciones. No quiero hacerla larga, así que voy al grano: luego de la pandemia a mi papi le diagnosticaron cáncer y lo terminé perdiendo, y un año después también se fue mi perrita Shasta, que había sido un soporte enorme para mí. Esas dos pérdidas me hicieron entender de la peor forma eso de que "uno no valora lo que tiene hasta que lo pierde". Desde ahí me volví mucho más expresivo con lo que sentía y pensaba, y también me quedó un miedo grande a perder a la gente que quiero.
+
+Y justo ahí entra el tema de haber sido intenso contigo. Para ese entonces ya te sentía parte de mi familia, y a eso se le sumó ese miedo a perderte. No lo uso como excusa, pero quiero que entiendas de dónde venía: no era presión ni capricho, sino que empecé a valorar más a las personas y me tocó aprenderlo contigo. Y aunque no me lo creas, sí llegué a entenderte en eso de la intensidad jajaja..medio mes después de que termináramos, un amigo empezó a buscarme constantemente para hablar o salir hasta tarde, y me sentí completamente asfixiado. En algún momento me reí solo y pensé: "ojalá pudiera hablarle a la Mel y decirle que ya ENTENDÍ" jajaja.
+
+También hubo momentos en que te dije que eras muy lógica o te hice algún comentario que tal vez te molestó, sin ser consciente de ello. Por ambas cosas te pido perdón.
+
+Quiero ser honesto en algo, porque creo que es importante para que entiendas por qué me fui alejando: cuando intenté disculparme en su momento y noté que el tema te incomodaba o te generaba molestia, lo interpreté como una señal de que querías borrón y cuenta nueva, como si nada de lo que vivimos importara. Probablemente no era tu intención, y puede que yo lo haya leído mal, pero eso fue lo que sentí, y fue uno de los motivos por los que dejé de buscarte. No lo digo para reprocharte nada, sino para que tenga sentido el silencio de mi parte.
+
+Y no fue nada fácil: las semanas siguientes me despertaba a las 4 am pensando en cómo solucionarlo. Ahora tengo cita con el psicólogo jajaja, supongo que fue cesando porque dejamos de interactuar.
+
+Durante esa época creo que llegué a conocerte más yo a ti que tú a mí, y ahora que lo analizo bien me siento profundamente arrepentido. Haría lo que fuera por volver en el tiempo y cambiar todo, porque en alguna de nuestras charlas te dije que si terminábamos no quería que fuéramos como los demás, esos que se dejan de hablar o se quedan mal  y mira cómo resultó. También te psicoanalisticé un poco jajaja, llegué a unas conclusiones y son las que me llevaron a escribirte esta carta. Por favor no me odies.
+
+Y hablando de errores: al ser mi pareja, también eras mi mejor amiga. Mi mayor error fue consultar con amigos externos, porque cada uno tenía su perspectiva y su forma de ver las cosas  y al final cada relación es distinta. Me dejé llevar por sus opiniones, me perdí en el proceso, y bueno... el resto es historia.
+
+También está el tema de tu cumpleaños. No te felicité, y me pasé al hacerte eso. No me parecía justo ignorarte dos meses y después aparecerme convenientemente solo para el cumpleaños... pero en mi defensa, tenía pensado felicitarte y regalarte algo, y por culpa de los bloqueos sigue ahí...en La Paz jajaja. El tiempo está volando, así que mejor lo digo ahora y te lo entrego después: ¡Feliz Cumpleaños! Pese a todo, eres una persona que fue de mucho impacto en mi vida. No creo que las personas sean temporales ni un proceso  eres mucho ambiente  y quiero que sepas que aunque no haya estado presente, te aprecio mucho. Me gustaría invitarte a almorzar o cenar en algún lugar, pero mi mami es estricta y ya perdí mis dos salidas del mes jajaja asi que tendras que recibir una comida en la puerta de tu casa como la anterior vez jajjaa.
+
+Me parece tonto poder decir que estoy bien con otras personas y no contigo. Me tomó un buen rato llegar acá, pero mejor tarde que nunca: aún te quiero y quiero que estemos bien.
+
+Si quieres estar en modo Chicle de menta lo entenderé a full, porque es obvio que la confianza salió del chat :( . Pero sí me gustaría volver a hablar contigo en tu tiempo libre y ser tu amigo. Y si todavía existe la posibilidad de volver en algún momento, estaría más que dispuesto a hacer las cosas bien. Sé que la arruiné, ok? Tal como dijiste... fuiste mi evento canónico, y creo que a veces las personas llegan para enseñarte cosas que no sabías que hacías mal.
+
+Gracias por darme los mejores 5 meses de mi vida, y perdón por darte los más intensos jajaja.
+
+PD. También tenemos que hablar del tótem aaaaaa.
