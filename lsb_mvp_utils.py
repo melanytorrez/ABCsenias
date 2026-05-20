@@ -11,6 +11,13 @@ mp_hands = mp.solutions.hands
 mp_drawing = mp.solutions.drawing_utils
 SEQ_LEN = 20
 
+# Detector global para evitar inicializar MediaPipe en cada frame
+hands_detector = mp_hands.Hands(
+    max_num_hands=1,
+    min_detection_confidence=0.6,
+    min_tracking_confidence=0.6
+)
+
 # --- Clases y Funciones de Procesamiento ---
 class SequenceBuffer:
     def __init__(self, maxlen=SEQ_LEN):
@@ -44,33 +51,32 @@ def process_frame(frame, buffer, prev_feats, motion_hist, clf_static, clf_seq):
     feats = None
     hand_detected = False
 
-    with mp_hands.Hands(max_num_hands=1, min_detection_confidence=0.6) as hands:
-        res = hands.process(rgb)
-        if res.multi_hand_landmarks:
-            hand_detected = True
-            mp_drawing.draw_landmarks(frame, res.multi_hand_landmarks[0], mp_hands.HAND_CONNECTIONS)
-            feats = landmarks_to_features(res.multi_hand_landmarks[0].landmark)
-            
-            if prev_feats is not None:
-                score = motion_score(prev_feats, feats)
-                motion_hist.append(score)
+    res = hands_detector.process(rgb)
+    if res.multi_hand_landmarks:
+        hand_detected = True
+        mp_drawing.draw_landmarks(frame, res.multi_hand_landmarks[0], mp_hands.HAND_CONNECTIONS)
+        feats = landmarks_to_features(res.multi_hand_landmarks[0].landmark)
+        
+        if prev_feats is not None:
+            score = motion_score(prev_feats, feats)
+            motion_hist.append(score)
 
-            moving = sum(s > 0.15 for s in motion_hist)
-            if moving >= 8:
-                buffer.add(feats)
-                msg = "[DINAMICO...]"
-                if buffer.is_ready():
-                    X = buffer.get_sequence().reshape(1, -1)
-                    proba = clf_seq.predict_proba(X)[0]
-                    conf = np.max(proba)
-                    if conf >= 0.7:
-                        pred = clf_seq.classes_[np.argmax(proba)]
-                        msg = f"[D] {pred} ({conf:.2f})"
-            else:
-                X = feats.reshape(1, -1)
-                proba = clf_static.predict_proba(X)[0]
-                pred = clf_static.classes_[np.argmax(proba)]
+        moving = sum(s > 0.15 for s in motion_hist)
+        if moving >= 8:
+            buffer.add(feats)
+            msg = "[DINAMICO...]"
+            if buffer.is_ready():
+                X = buffer.get_sequence().reshape(1, -1)
+                proba = clf_seq.predict_proba(X)[0]
                 conf = np.max(proba)
-                msg = f"[E] {pred} ({conf:.2f})"
+                if conf >= 0.7:
+                    pred = clf_seq.classes_[np.argmax(proba)]
+                    msg = f"[D] {pred} ({conf:.2f})"
+        else:
+            X = feats.reshape(1, -1)
+            proba = clf_static.predict_proba(X)[0]
+            pred = clf_static.classes_[np.argmax(proba)]
+            conf = np.max(proba)
+            msg = f"[E] {pred} ({conf:.2f})"
     
     return frame, msg, feats, hand_detected

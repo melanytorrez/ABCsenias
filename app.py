@@ -110,15 +110,13 @@ def background_thread():
             socketio.sleep(0.01)
             continue
         
-        # Efecto espejo en el frame para comportamiento de tótem interactivo
-        frame = cv2.flip(frame, 1)
-        
         frame_h, frame_w, _ = frame.shape
         roi_w = int(frame_w * 0.6)
         roi_h = int(frame_h * 0.75)
         roi_x = int((frame_w - roi_w) / 2)
         roi_y = int((frame_h - roi_h) / 2)
         
+        # Obtener el ROI del frame original (sin espejar) para que la IA clasifique correctamente
         roi = frame[roi_y:roi_y+roi_h, roi_x:roi_x+roi_w]
         
         hand_detected_in_roi = False
@@ -126,13 +124,21 @@ def background_thread():
         feats = None
         
         if clf_static and clf_seq:
-            # Procesar el ROI a través de MediaPipe y obtener predicción
+            # Procesar el ROI a través de MediaPipe y obtener predicción (sobre la mano natural)
             processed_roi, msg, current_feats, hand_detected_in_roi = utils.process_frame(
                 roi.copy(), buffer, prev_feats, motion_hist, clf_static, clf_seq
             )
             
-            # Reinsertar el ROI dibujado en el frame principal
-            frame[roi_y:roi_y+roi_h, roi_x:roi_x+roi_w] = processed_roi
+            # Espejar el ROI procesado (que ya tiene los landmarks dibujados)
+            processed_roi_mirrored = cv2.flip(processed_roi, 1)
+            
+            # Espejar el frame principal completo
+            frame_mirrored = cv2.flip(frame, 1)
+            
+            # Reinsertar el ROI espejado en el frame espejado
+            frame_mirrored[roi_y:roi_y+roi_h, roi_x:roi_x+roi_w] = processed_roi_mirrored
+            frame = frame_mirrored
+            
             prev_feats = current_feats
 
             # Parsear mensaje de predicción: Ej. "[E] C (0.85)" o "[D] J (0.92)"
@@ -211,6 +217,8 @@ def background_thread():
                 if (time.time() - last_hand_seen) > 2.0:
                     last_added_letter = None
         else:
+            # Fallback: Espejar el frame si los modelos no están cargados
+            frame = cv2.flip(frame, 1)
             socketio.emit('hand_presence', {'detected': False})
 
         # Dibujar marco Cyan/Amarillo de la región de interés (ROI)
