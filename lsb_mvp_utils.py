@@ -69,7 +69,7 @@ def process_frame(frame, buffer, prev_feats, motion_hist, clf_static, clf_seq):
                 X = buffer.get_sequence().reshape(1, -1)
                 proba = clf_seq.predict_proba(X)[0]
                 conf = np.max(proba)
-                if conf >= 0.7:
+                if conf >= 0.4:
                     pred = clf_seq.classes_[np.argmax(proba)]
                     msg = f"[D] {pred} ({conf:.2f})"
         else:

@@ -71,11 +71,11 @@ latest_frame = None
 # Búfer de estabilización de predicciones estáticas (Sliding window)
 static_predictions = deque(maxlen=10)
 VOTING_SIZE = 10
-REQUIRED_VOTES = 7
+REQUIRED_VOTES = 5
 
 # Umbrales y Cooldowns
-CONFIDENCE_THRESHOLD_STATIC = 0.80
-CONFIDENCE_THRESHOLD_SEQ = 0.70
+CONFIDENCE_THRESHOLD_STATIC = 0.55
+CONFIDENCE_THRESHOLD_SEQ = 0.55
 LETTER_COOLDOWN = 2.0
 
 last_added_letter = None
@@ -110,13 +110,15 @@ def background_thread():
             socketio.sleep(0.01)
             continue
         
+        # Efecto espejo en el frame para comportamiento de tótem interactivo y compatibilidad con el modelo
+        frame = cv2.flip(frame, 1)
+
         frame_h, frame_w, _ = frame.shape
         roi_w = int(frame_w * 0.6)
         roi_h = int(frame_h * 0.75)
         roi_x = int((frame_w - roi_w) / 2)
         roi_y = int((frame_h - roi_h) / 2)
         
-        # Obtener el ROI del frame original (sin espejar) para que la IA clasifique correctamente
         roi = frame[roi_y:roi_y+roi_h, roi_x:roi_x+roi_w]
         
         hand_detected_in_roi = False
@@ -124,20 +126,13 @@ def background_thread():
         feats = None
         
         if clf_static and clf_seq:
-            # Procesar el ROI a través de MediaPipe y obtener predicción (sobre la mano natural)
+            # Procesar el ROI espejado a través de MediaPipe y obtener predicción
             processed_roi, msg, current_feats, hand_detected_in_roi = utils.process_frame(
                 roi.copy(), buffer, prev_feats, motion_hist, clf_static, clf_seq
             )
             
-            # Espejar el ROI procesado (que ya tiene los landmarks dibujados)
-            processed_roi_mirrored = cv2.flip(processed_roi, 1)
-            
-            # Espejar el frame principal completo
-            frame_mirrored = cv2.flip(frame, 1)
-            
-            # Reinsertar el ROI espejado en el frame espejado
-            frame_mirrored[roi_y:roi_y+roi_h, roi_x:roi_x+roi_w] = processed_roi_mirrored
-            frame = frame_mirrored
+            # Reinsertar el ROI dibujado en el frame principal
+            frame[roi_y:roi_y+roi_h, roi_x:roi_x+roi_w] = processed_roi
             
             prev_feats = current_feats
 
@@ -147,12 +142,15 @@ def background_thread():
             is_moving = False
             
             if msg:
-                match = re.match(r'^\[([ED])\]\s+([A-Z])\s+\((0\.\d+|1\.0+)\)', msg)
-                if match:
-                    gesture_type = match.group(1) # 'E' (Estático) o 'D' (Dinámico)
-                    pred_letter = match.group(2)
-                    pred_conf = float(match.group(3))
-                    is_moving = (gesture_type == 'D')
+                if msg == "[DINAMICO...]":
+                    is_moving = True
+                else:
+                    match = re.match(r'^\[([ED])\]\s+([A-Z])\s+\((0\.\d+|1\.0+)\)', msg)
+                    if match:
+                        gesture_type = match.group(1) # 'E' (Estático) o 'D' (Dinámico)
+                        pred_letter = match.group(2)
+                        pred_conf = float(match.group(3))
+                        is_moving = (gesture_type == 'D')
 
             # Manejar eventos de presencia y estabilidad de señas
             if hand_detected_in_roi:
@@ -217,8 +215,6 @@ def background_thread():
                 if (time.time() - last_hand_seen) > 2.0:
                     last_added_letter = None
         else:
-            # Fallback: Espejar el frame si los modelos no están cargados
-            frame = cv2.flip(frame, 1)
             socketio.emit('hand_presence', {'detected': False})
 
         # Dibujar marco Cyan/Amarillo de la región de interés (ROI)
