@@ -1,4 +1,4 @@
-# app.py (Versión con cuadro de reconocimiento y función para BORRAR)
+# app.py (Versión Kiosco Local para Windows Totem)
 
 from flask import Flask, render_template, Response
 from flask_socketio import SocketIO
@@ -10,14 +10,28 @@ import lsb_mvp_utils as utils
 from threading import Lock
 import joblib
 from pathlib import Path
+import sys
+import os
+import re
 
-app = Flask(__name__)
-app.config['SECRET_KEY'] = 'secret!'
-socketio = SocketIO(app)
+# --- Resolución de Rutas para PyInstaller ---
+def resource_path(relative_path):
+    """Obtiene la ruta absoluta de un recurso, compatible con desarrollo y empaquetado EXE."""
+    try:
+        # PyInstaller crea una carpeta temporal y guarda la ruta en _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
 
-# --- Configuración de Modelos y Carga (Sin cambios) ---
-MODEL_PATH = Path("models/lsb_alpha.joblib")
-MODEL_SEQ_PATH = Path("models/lsb_seq.joblib")
+# Inicializar Flask con ruta de plantillas dinámica
+app = Flask(__name__, template_folder=resource_path("templates"))
+app.config['SECRET_KEY'] = 'totem_secret_key_2025'
+socketio = SocketIO(app, cors_allowed_origins="*")
+
+# --- Rutas de Modelos ---
+MODEL_PATH = Path(resource_path("models/lsb_alpha.joblib"))
+MODEL_SEQ_PATH = Path(resource_path("models/lsb_seq.joblib"))
 
 clf_static = None
 clf_seq = None
@@ -31,14 +45,14 @@ def load_models():
         
         bundle_seq = joblib.load(MODEL_SEQ_PATH)
         clf_seq = bundle_seq["pipeline"]
-        print("[INFO] Modelos de IA cargados correctamente.")
-    except FileNotFoundError:
-        print("\n[ERROR] No se pudieron cargar los modelos.")
-        print("Asegúrate de haber ejecutado 'python lsb_mvp.py train' y 'python lsb_mvp.py train-seq'.")
+        print("[INFO] Modelos de IA cargados correctamente para Windows Totem.")
+    except Exception as e:
+        print(f"\n[ERROR] No se pudieron cargar los modelos en {MODEL_PATH}: {e}")
+        print("Asegúrate de haber copiado las carpetas models/ y models_tflite/ correctamente.")
         clf_static = None
         clf_seq = None
 
-# --- Variables Globales y Lógica (Sin cambios) ---
+# --- Variables de Control y Memoria del Pipeline ---
 cap = None
 buffer = utils.SequenceBuffer()
 prev_feats = None
@@ -48,39 +62,49 @@ thread = None
 thread_lock = Lock()
 latest_frame = None
 
-current_sentence = []
-last_added_letter = None
-last_hand_seen_time = time.time()
-last_letter_add_time = 0
-SPACE_TIMEOUT = 4.0
+# Búfer de estabilización de predicciones estáticas (Sliding window)
+static_predictions = deque(maxlen=10)
+VOTING_SIZE = 10
+REQUIRED_VOTES = 7
+
+# Umbrales y Cooldowns
+CONFIDENCE_THRESHOLD_STATIC = 0.80
+CONFIDENCE_THRESHOLD_SEQ = 0.70
 LETTER_COOLDOWN = 2.0
 
-hand_in_roi_start_time = None
-RECOGNITION_DELAY_SECONDS = 1.0
-roi_color = (255, 255, 0)
+last_added_letter = None
+last_letter_add_time = 0.0
 
+# --- Hilo de Procesamiento de Cámara ---
 def background_thread():
-    """El 'cerebro' de la aplicación. Se ejecuta en segundo plano."""
+    """El cerebro de la IA. Lee la cámara, procesa con MediaPipe y clasifica en tiempo real."""
     global cap, prev_feats, motion_hist, buffer, latest_frame
-    global current_sentence, last_added_letter, last_hand_seen_time, last_letter_add_time
-    global hand_in_roi_start_time, roi_color
+    global last_added_letter, last_letter_add_time
 
     if clf_static is None or clf_seq is None:
-        print("[ADVERTENCIA] Modelos no disponibles. La aplicación web solo mostrará el video.")
+        print("[ADVERTENCIA] Los modelos no están disponibles. Se mostrará solo el video.")
     
     if cap is None:
+        # Abrir la cámara web por defecto de Windows
         cap = cv2.VideoCapture(0)
         if not cap.isOpened():
-            print("Error: No se pudo abrir la cámara.")
+            print("[ERROR] No se pudo abrir la cámara web de Windows.")
             return
 
-    print("Iniciando hilo de fondo...")
+    # Ajustar resolución por defecto para optimizar rendimiento
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+
+    print("[INFO] Hilo de cámara iniciado a 30 FPS.")
+    last_hand_seen = time.time()
+    
     while True:
         success, frame = cap.read()
         if not success:
-            time.sleep(0.1)
+            socketio.sleep(0.01)
             continue
         
+        # Efecto espejo en el frame para comportamiento de tótem interactivo
         frame = cv2.flip(frame, 1)
         
         frame_h, frame_w, _ = frame.shape
@@ -92,81 +116,122 @@ def background_thread():
         roi = frame[roi_y:roi_y+roi_h, roi_x:roi_x+roi_w]
         
         hand_detected_in_roi = False
+        msg = ""
+        feats = None
         
         if clf_static and clf_seq:
+            # Procesar el ROI a través de MediaPipe y obtener predicción
             processed_roi, msg, current_feats, hand_detected_in_roi = utils.process_frame(
                 roi.copy(), buffer, prev_feats, motion_hist, clf_static, clf_seq
             )
             
+            # Reinsertar el ROI dibujado en el frame principal
             frame[roi_y:roi_y+roi_h, roi_x:roi_x+roi_w] = processed_roi
             prev_feats = current_feats
 
+            # Parsear mensaje de predicción: Ej. "[E] C (0.85)" o "[D] J (0.92)"
+            pred_letter = None
+            pred_conf = 0.0
+            is_moving = False
+            
+            if msg:
+                match = re.match(r'^\[([ED])\]\s+([A-Z])\s+\((0\.\d+|1\.0+)\)', msg)
+                if match:
+                    gesture_type = match.group(1) # 'E' (Estático) o 'D' (Dinámico)
+                    pred_letter = match.group(2)
+                    pred_conf = float(match.group(3))
+                    is_moving = (gesture_type == 'D')
+
+            # Manejar eventos de presencia y estabilidad de señas
             if hand_detected_in_roi:
-                last_hand_seen_time = time.time()
+                last_hand_seen = time.time()
+                socketio.emit('hand_presence', {'detected': True})
                 
-                if hand_in_roi_start_time is None:
-                    hand_in_roi_start_time = time.time()
-                    roi_color = (0, 255, 255)
-                else:
-                    elapsed_time = time.time() - hand_in_roi_start_time
+                # Emitir estado de detección en tiempo real para mostrar en el feed
+                socketio.emit('status_update', {
+                    'letter': pred_letter if pred_letter else "",
+                    'confidence': pred_conf,
+                    'is_moving': is_moving,
+                    'msg': msg
+                })
+
+                if is_moving:
+                    # Si la mano se está moviendo, limpiamos el historial estático
+                    static_predictions.clear()
                     
-                    if elapsed_time >= RECOGNITION_DELAY_SECONDS:
-                        roi_color = (0, 255, 0)
+                    # Detección dinámica (J, Z)
+                    if pred_letter and pred_conf >= CONFIDENCE_THRESHOLD_SEQ:
+                        now = time.time()
+                        if (now - last_letter_add_time) > LETTER_COOLDOWN:
+                            if pred_letter != last_added_letter:
+                                last_added_letter = pred_letter
+                                last_letter_add_time = now
+                                socketio.emit('career_detected', {
+                                    'letter': pred_letter,
+                                    'confidence': pred_conf
+                                })
+                else:
+                    # Detección estática - Votar en ventana deslizante
+                    if pred_letter and pred_conf >= CONFIDENCE_THRESHOLD_STATIC:
+                        static_predictions.append(pred_letter)
+                    else:
+                        static_predictions.append("None")
+                    
+                    # Contar votos mayoritarios
+                    non_none_votes = [v for v in static_predictions if v != "None"]
+                    if non_none_votes:
+                        from collections import Counter
+                        counts = Counter(non_none_votes)
+                        best_letter, count = counts.most_common(1)[0]
                         
-                        if (time.time() - last_letter_add_time) > LETTER_COOLDOWN:
-                            if msg and len(msg.split(' ')) > 1:
-                                predicted_letter = msg.split(' ')[1]
-                                if predicted_letter != last_added_letter:
-                                    current_sentence.append(predicted_letter)
-                                    last_added_letter = predicted_letter
-                                    last_letter_add_time = time.time()
-                                    socketio.emit('update_text', {'text': "".join(current_sentence)})
-                        hand_in_roi_start_time = None 
+                        # Si hay suficiente consenso (7 de 10 frames)
+                        if count >= REQUIRED_VOTES:
+                            now = time.time()
+                            if (now - last_letter_add_time) > LETTER_COOLDOWN:
+                                if best_letter != last_added_letter:
+                                    last_added_letter = best_letter
+                                    last_letter_add_time = now
+                                    socketio.emit('career_detected', {
+                                        'letter': best_letter,
+                                        'confidence': pred_conf
+                                    })
+                                    static_predictions.clear()
             else:
-                hand_in_roi_start_time = None
-                roi_color = (255, 255, 0)
+                # No hay mano
+                static_predictions.clear()
+                socketio.emit('hand_presence', {'detected': False})
                 
-                if (time.time() - last_hand_seen_time) > SPACE_TIMEOUT:
-                    if current_sentence and current_sentence[-1] != ' ':
-                        current_sentence.append(' ')
-                        last_added_letter = ' '
-                        socketio.emit('update_text', {'text': "".join(current_sentence)})
-                        last_hand_seen_time = time.time()
-                        last_letter_add_time = 0
-                if last_added_letter is not None and last_added_letter != ' ':
+                # Si no hay mano por 2.0 segundos, desbloquear la letra para volver a detectarla
+                if (time.time() - last_hand_seen) > 2.0:
                     last_added_letter = None
         else:
-            processed_frame = frame
-        
-        cv2.rectangle(frame, (roi_x, roi_y), (roi_x+roi_w, roi_y+roi_h), roi_color, 2)
-        
-        status_text = "Coloque la mano aqui"
-        if hand_in_roi_start_time is not None:
-            status_text = "Estabilice la mano..."
-            if roi_color == (0, 255, 0): status_text = "¡Reconocido!"
+            socketio.emit('hand_presence', {'detected': False})
 
-        cv2.putText(frame, status_text, (roi_x, roi_y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, roi_color, 2)
+        # Dibujar marco Cyan/Amarillo de la región de interés (ROI)
+        color = (255, 229, 0) if hand_detected_in_roi else (0, 229, 255)
+        cv2.rectangle(frame, (roi_x, roi_y), (roi_x+roi_w, roi_y+roi_h), color, 2)
         
         with thread_lock:
             latest_frame = frame.copy()
         
-        socketio.sleep(0.05)
+        socketio.sleep(0.03) # ~30 FPS
 
+# --- Emisión de Frames de Video (MJPEG) ---
 def generate_frames():
-    """Los 'ojos' de la aplicación. Solo sirve el video."""
     global latest_frame
     while True:
         with thread_lock:
             if latest_frame is None:
-                time.sleep(0.1)
+                time.sleep(0.03)
                 continue
             ret, buffer_img = cv2.imencode('.jpg', latest_frame)
             frame_bytes = buffer_img.tobytes()
 
         yield (b'--frame\r\n'
                b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
-        socketio.sleep(0.05)
+        socketio.sleep(0.03)
 
+# --- Rutas de Flask ---
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -175,27 +240,26 @@ def index():
 def video_feed():
     return Response(generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
+# --- Controladores de WebSocket ---
 @socketio.on('connect')
 def handle_connect():
-    global thread
-    print('Cliente conectado')
-    with thread_lock:
-        if thread is None:
-            thread = socketio.start_background_task(target=background_thread)
-    socketio.emit('update_text', {'text': "".join(current_sentence)})
+    print('[INFO] Cliente conectado al WebSocket del Tótem.')
 
-# --- NUEVA FUNCIÓN PARA BORRAR EL TEXTO ---
-@socketio.on('clear_text')
-def handle_clear_text():
-    """Limpia la oración actual cuando recibe la señal del cliente."""
-    global current_sentence, last_added_letter
-    current_sentence = []
-    last_added_letter = None
-    # Informa a todos los clientes que el texto ahora está vacío
-    socketio.emit('update_text', {'text': ""})
-    print('[INFO] Texto borrado por el cliente.')
-# --- FIN DE LA NUEVA FUNCIÓN ---
+@socketio.on('simulate_detection')
+def handle_simulate_detection(data):
+    """Permite al frontend simular una detección tocando los botones inferiores."""
+    letter = data.get('letter', '').upper()
+    if letter:
+        print(f"[SIMULADO] Detección táctil de la carrera: {letter}")
+        socketio.emit('career_detected', {
+            'letter': letter,
+            'confidence': 1.0,
+            'simulated': True
+        })
 
 if __name__ == '__main__':
-    load_models() 
-    socketio.run(app, host='0.0.0.0', debug=True)
+    load_models()
+    # Iniciar el hilo de fondo para procesamiento de video e IA
+    thread = socketio.start_background_task(target=background_thread)
+    # Ejecutar en localhost puerto 5000
+    socketio.run(app, host='127.0.0.1', port=5000, debug=False, use_reloader=False)

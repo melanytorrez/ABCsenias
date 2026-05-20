@@ -3,109 +3,745 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Traductor de Lengua de Señas</title>
+    <title>Tótem Interactivo - Lengua de Señas UCB</title>
+    
+    <!-- Google Fonts: Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f0f2f5;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
+        :root {
+            --bg-color: #0B0F19;
+            --card-bg: #161D30;
+            --card-border: #1F2942;
+            --cyan-neon: #00E5FF;
+            --cyan-neon-glow: rgba(0, 229, 255, 0.4);
+            --status-active: #10B981;
+            --text-primary: #FFFFFF;
+            --text-secondary: #94A3B8;
+            --text-muted: #64748B;
+            --btn-blue: #0D47A1;
+            --btn-purple: #4A148C;
+        }
+
+        * {
+            box-sizing: border-box;
             margin: 0;
+            padding: 0;
         }
-        .container {
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Contenedor Principal (Simula resolución de Tótem 1080x1920) */
+        .totem-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            background-color: var(--bg-color);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- Estilo Base de las Vistas --- */
+        .view-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            padding: 40px 30px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            background-color: white;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            justify-content: space-between;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            box-sizing: border-box;
+            background-color: var(--bg-color);
         }
-        h1 {
-            color: #333;
-            margin-top: 0;
+
+        .hidden-left {
+            transform: translateX(-100%);
+            opacity: 0;
+            pointer-events: none;
         }
-        #video {
-            border: 2px solid #ccc;
-            border-radius: 8px;
-            max-width: 100%;
-            height: auto;
+
+        .hidden-right {
+            transform: translateX(100%);
+            opacity: 0;
+            pointer-events: none;
         }
-        .output-container {
-            width: 100%;
-            margin-top: 20px;
-        }
-        #translated-text {
-            width: calc(100% - 24px); /* Ajuste por padding */
-            min-height: 50px;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            background-color: #fafafa;
-            font-size: 1.5em;
+
+        /* --- VISTA PRINCIPAL (CÁMARA) --- */
+        .header {
             text-align: center;
-            color: #555;
-            word-wrap: break-word;
+            margin-top: 10px;
         }
-        #clear-button {
-            margin-top: 15px;
-            padding: 10px 20px;
-            font-size: 1em;
+
+        .header .uni-badge {
+            font-size: 13px;
+            font-weight: 800;
+            color: var(--cyan-neon);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+
+        .header .event-pill {
+            display: inline-block;
+            margin-top: 12px;
+            background: linear-gradient(135deg, #1E3A8A, #581C87);
             color: white;
-            background-color: #dc3545; /* Color rojo */
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s;
+            padding: 8px 24px;
+            border-radius: 50px;
+            font-size: 14px;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         }
-        #clear-button:hover {
-            background-color: #c82333;
+
+        .header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            margin-top: 25px;
+            line-height: 1.2;
+        }
+
+        .header h1 span {
+            color: var(--cyan-neon);
+            font-weight: 800;
+            text-shadow: 0 0 10px var(--cyan-neon-glow);
+        }
+
+        /* Área de Cámara */
+        .camera-wrapper {
+            width: 100%;
+            max-width: 600px;
+            aspect-ratio: 4/3;
+            position: relative;
+            border-radius: 24px;
+            background-color: var(--card-bg);
+            border: 2px solid var(--card-border);
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        /* Brillo de cámara cuando detecta mano */
+        .camera-wrapper.hand-present {
+            border-color: var(--cyan-neon);
+            box-shadow: 0 0 30px var(--cyan-neon-glow), 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        #video-feed {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 22px;
+        }
+
+        /* Indicador de Cámara Activa */
+        .camera-status {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 8px 18px;
+            border-radius: 50px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+        }
+
+        .camera-status .dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--status-active);
+            border-radius: 50%;
+            box-shadow: 0 0 8px var(--status-active);
+            animation: pulse 1.5s infinite alternate;
+        }
+
+        /* Pill de letra detectada en tiempo real */
+        .detection-pill {
+            position: absolute;
+            bottom: 25px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid var(--cyan-neon);
+            box-shadow: 0 0 15px var(--cyan-neon-glow);
+            padding: 10px 24px;
+            border-radius: 16px;
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--cyan-neon);
+            opacity: 0;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        .detection-pill.visible {
+            opacity: 1;
+        }
+
+        /* Instrucciones */
+        .instructions {
+            text-align: center;
+            font-size: 17px;
+            color: var(--text-secondary);
+            margin: 15px 0;
+        }
+
+        .instructions span {
+            color: var(--cyan-neon);
+            font-weight: 600;
+        }
+
+        /* Grid de Simulación */
+        .simulation-container {
+            width: 100%;
+            text-align: center;
+        }
+
+        .simulation-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+
+        .letter-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .letter-btn {
+            aspect-ratio: 1;
+            background: linear-gradient(180deg, #1E3A8A, rgba(30, 58, 138, 0.7));
+            border: none;
+            border-radius: 18px;
+            font-size: 26px;
+            font-weight: 800;
+            color: white;
+            cursor: pointer;
+            transition: transform 0.1s ease, box-shadow 0.2s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        .letter-btn:active {
+            transform: scale(0.92);
+            background: var(--cyan-neon);
+            color: var(--bg-color);
+            box-shadow: 0 0 15px var(--cyan-neon-glow);
+        }
+
+        /* --- VISTA DE DETALLE (RESULTADOS) --- */
+        .detail-view {
+            padding: 50px 30px 40px 30px;
+        }
+
+        .letter-badge-container {
+            margin-top: 30px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .letter-badge {
+            width: 130px;
+            height: 130px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--bg-color), var(--card-bg));
+            border: 3px solid var(--cyan-neon);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 64px;
+            font-weight: 800;
+            color: var(--cyan-neon);
+            box-shadow: 0 0 30px var(--cyan-neon-glow);
+        }
+
+        .faculty-badge {
+            background-color: rgba(0, 229, 255, 0.1);
+            border: 1px solid rgba(0, 229, 255, 0.3);
+            color: var(--cyan-neon);
+            padding: 8px 20px;
+            border-radius: 50px;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        /* Info Card de Carrera */
+        .info-card {
+            width: 100%;
+            max-width: 600px;
+            background: linear-gradient(185deg, var(--card-bg), rgba(22, 29, 48, 0.8));
+            border: 1px solid var(--card-border);
+            border-radius: 30px;
+            padding: 35px 30px;
+            margin: 25px 0;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            flex-grow: 1;
+            justify-content: center;
+        }
+
+        .info-card h2 {
+            font-size: 28px;
+            font-weight: 800;
+            line-height: 1.2;
+            text-align: center;
+        }
+
+        .info-card .description {
+            font-size: 16px;
+            line-height: 1.6;
+            color: var(--text-secondary);
+            text-align: center;
+        }
+
+        .info-card .details-row {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            border-top: 1px solid var(--card-border);
+            border-bottom: 1px solid var(--card-border);
+            padding: 15px 0;
+            margin: 5px 0;
+        }
+
+        .detail-item {
+            text-align: center;
+        }
+
+        .detail-item .label {
+            font-size: 11px;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        .detail-item .val {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--cyan-neon);
+        }
+
+        /* Tags/Píldoras */
+        .tags-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .tag-pill {
+            background-color: var(--card-border);
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 600;
+            padding: 6px 16px;
+            border-radius: 50px;
+        }
+
+        /* Barra del temporizador de inactividad */
+        .timer-container {
+            width: 100%;
+            max-width: 450px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .timer-text {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+        }
+
+        .timer-text span {
+            color: var(--cyan-neon);
+            font-weight: 600;
+        }
+
+        .progress-bar-bg {
+            width: 100%;
+            height: 6px;
+            background-color: var(--card-border);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, var(--cyan-neon), #2962FF);
+            border-radius: 10px;
+            width: 100%;
+            transition: width 1s linear;
+        }
+
+        /* Botón de Retorno */
+        .back-btn {
+            width: 100%;
+            max-width: 450px;
+            padding: 16px;
+            border-radius: 20px;
+            background: linear-gradient(135deg, var(--btn-blue), rgba(13, 71, 161, 0.8));
+            border: 1px solid rgba(0, 229, 255, 0.3);
+            color: white;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .back-btn:active {
+            transform: scale(0.97);
+            box-shadow: 0 0 10px var(--cyan-neon-glow);
+            background: var(--cyan-neon);
+            color: var(--bg-color);
+        }
+
+        /* Animación de Pulso */
+        @keyframes pulse {
+            0% { opacity: 0.4; }
+            100% { opacity: 1; }
         }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <h1>Traductor de Señas en Tiempo Real</h1>
-        <img id="video" src="{{ url_for('video_feed') }}" width="640" height="480">
+    <div class="totem-container" id="totem-app" onclick="resetInactivityTimer()">
         
-        <div class="output-container">
-            <div id="translated-text"></div>
-            <!-- ESTE ES EL NUEVO BOTÓN -->
-            <button id="clear-button">Borrar Texto</button>
+        <!-- VISTA 1: PANTALLA PRINCIPAL (CÁMARA) -->
+        <div class="view-container" id="main-view">
+            <!-- Encabezado -->
+            <div class="header">
+                <div class="uni-badge">🎓 Universidad Católica Boliviana</div>
+                <div class="event-pill">Feria de Carreras 2025</div>
+                <h1>Interactúa con<br><span>Lengua de Señas</span></h1>
+            </div>
+
+            <!-- Contenedor del Feed de Cámara -->
+            <div class="camera-wrapper" id="camera-box">
+                <div class="camera-status">
+                    <div class="dot"></div>
+                    CÁMARA ACTIVA
+                </div>
+                <img id="video-feed" src="/video_feed" alt="Video de Cámara">
+                <div class="detection-pill" id="live-detection">Detectando...</div>
+            </div>
+
+            <!-- Instrucción -->
+            <div class="instructions">
+                Haz la inicial de una carrera frente a la cámara<br>
+                o usa la sección de <span>simulación táctil</span> inferior.
+            </div>
+
+            <!-- Botones de Simulación -->
+            <div class="simulation-container">
+                <div class="simulation-label">~ Simular Detección ~</div>
+                <div class="letter-grid">
+                    <button class="letter-btn" onclick="simulateLetter('A')">A</button>
+                    <button class="letter-btn" onclick="simulateLetter('B')">B</button>
+                    <button class="letter-btn" onclick="simulateLetter('C')">C</button>
+                    <button class="letter-btn" onclick="simulateLetter('D')">D</button>
+                    <button class="letter-btn" onclick="simulateLetter('E')">E</button>
+                    <button class="letter-btn" onclick="simulateLetter('I')">I</button>
+                    <button class="letter-btn" onclick="simulateLetter('M')">M</button>
+                    <button class="letter-btn" onclick="simulateLetter('P')">P</button>
+                </div>
+            </div>
         </div>
+
+        <!-- VISTA 2: DETALLE DE CARRERA -->
+        <div class="view-container hidden-right" id="detail-view">
+            <!-- Badge de Letra -->
+            <div class="letter-badge-container">
+                <div class="letter-badge" id="career-letter">C</div>
+            </div>
+            
+            <div class="faculty-badge" id="career-faculty">FACULTAD DE CIENCIAS</div>
+
+            <!-- Tarjeta de Información -->
+            <div class="info-card" id="career-card">
+                <h2 id="career-name">Comunicación Social</h2>
+                <div class="description" id="career-desc">
+                    Descripción detallada de la carrera seleccionada.
+                </div>
+                
+                <div class="details-row">
+                    <div class="detail-item">
+                        <div class="label">Duración</div>
+                        <div class="val" id="career-duration">4 Años</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="label">Régimen</div>
+                        <div class="val">Semestral</div>
+                    </div>
+                </div>
+
+                <div class="tags-container" id="career-tags">
+                    <!-- Dinámico -->
+                </div>
+            </div>
+
+            <!-- Temporizador de Inactividad -->
+            <div class="timer-container">
+                <div class="timer-text">
+                    La pantalla se cerrará en <span id="timer-seconds">30</span> segundos
+                </div>
+                <div class="progress-bar-bg">
+                    <div class="progress-bar-fill" id="timer-progress"></div>
+                </div>
+            </div>
+
+            <!-- Botón Volver -->
+            <button class="back-btn" onclick="showMainView()">
+                <span>←</span> Volver a la Cámara
+            </button>
+        </div>
+
     </div>
 
-    <!-- Librería de Socket.IO para la comunicación en tiempo real -->
+    <!-- Socket.IO -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
-    
-    <script type="text/javascript">
-        // Conectarse al servidor de Socket.IO
-        var socket = io();
+    <script>
+        const socket = io();
 
-        // Obtener la referencia al cuadro de texto y al botón
-        const translatedTextDiv = document.getElementById('translated-text');
-        const clearButton = document.getElementById('clear-button');
+        // --- Datos del Repositorio de Carreras ---
+        const CAREERS = {
+            "A": {
+                name: "Administración de Empresas",
+                faculty: "Ciencias Económicas y Financieras",
+                description: "Forma líderes capaces de gestionar organizaciones con visión estratégica, innovación y responsabilidad social. Domina finanzas, marketing, operaciones y talento humano.",
+                tags: ["Gestión", "Finanzas", "Liderazgo"],
+                duration: "4 años",
+                gradient: "linear-gradient(135deg, #1A237E, #42A5F5)"
+            },
+            "B": {
+                name: "Bioquímica y Farmacia",
+                faculty: "Ciencias de la Salud",
+                description: "Estudia la composición química de los seres vivos y desarrolla fármacos para mejorar la salud. Combina laboratorio, investigación y atención farmacéutica.",
+                tags: ["Laboratorio", "Farmacia", "Investigación"],
+                duration: "5 años",
+                gradient: "linear-gradient(135deg, #00695C, #26A69A)"
+            },
+            "C": {
+                name: "Comunicación Social y Periodismo",
+                faculty: "Humanidades",
+                description: "Construye narrativas que transforman sociedades. Trabaja en medios digitales, periodismo de impacto y comunicación estratégica.",
+                tags: ["Medios", "Periodismo", "Creatividad"],
+                duration: "4 años",
+                gradient: "linear-gradient(135deg, #6A1B9A, #E040FB)"
+            },
+            "D": {
+                name: "Derecho",
+                faculty: "Ciencias Jurídicas y Políticas",
+                description: "Forma profesionales del derecho con pensamiento crítico y ético. Defiende la justicia y contribuye al desarrollo normativo de la sociedad.",
+                tags: ["Justicia", "Leyes", "Ética"],
+                duration: "5 años",
+                gradient: "linear-gradient(135deg, #4E342E, #BCAAA4)"
+            },
+            "E": {
+                name: "Economía",
+                faculty: "Ciencias Económicas y Financieras",
+                description: "Analiza mercados, políticas públicas y tendencias globales. Diseña estrategias económicas que impulsan el desarrollo sostenible de países y organizaciones.",
+                tags: ["Análisis", "Mercados", "Políticas"],
+                duration: "4 años",
+                gradient: "linear-gradient(135deg, #1B5E20, #66BB6A)"
+            },
+            "I": {
+                name: "Ingeniería de Sistemas",
+                faculty: "Ingeniería",
+                description: "Diseña, desarrolla e implementa soluciones tecnológicas. Desde inteligencia artificial hasta desarrollo de software y ciberseguridad.",
+                tags: ["Software", "IA", "Tecnología"],
+                duration: "5 años",
+                gradient: "linear-gradient(135deg, #0D47A1, #00E5FF)"
+            },
+            "M": {
+                name: "Medicina",
+                faculty: "Ciencias de la Salud",
+                description: "Forma médicos comprometidos con la salud integral. Diagnóstico, tratamiento y prevención de enfermedades con humanismo y excelencia científica.",
+                tags: ["Salud", "Diagnóstico", "Ciencia"],
+                duration: "6 años",
+                gradient: "linear-gradient(135deg, #B71C1C, #EF5350)"
+            },
+            "P": {
+                name: "Psicología",
+                faculty: "Humanidades",
+                description: "Comprende el comportamiento humano y promueve el bienestar emocional. Interviene en contextos clínicos, educativos y organizacionales.",
+                tags: ["Mente", "Bienestar", "Terapia"],
+                duration: "5 años",
+                gradient: "linear-gradient(135deg, #4A148C, #CE93D8)"
+            }
+        };
 
-        // Escuchar el evento 'update_text' del servidor
-        socket.on('update_text', function(data) {
-            // Actualizar el contenido del div con el texto recibido
-            translatedTextDiv.innerText = data.text;
+        // --- Variables de Estado del Temporizador ---
+        let inactivitySeconds = 30;
+        let inactivityInterval = null;
+        let isDetailActive = false;
+
+        // Elementos UI
+        const mainView = document.getElementById('main-view');
+        const detailView = document.getElementById('detail-view');
+        const cameraBox = document.getElementById('camera-box');
+        const liveDetection = document.getElementById('live-detection');
+
+        // --- Eventos de WebSockets ---
+        socket.on('hand_presence', function(data) {
+            if (data.detected) {
+                cameraBox.classList.add('hand-present');
+            } else {
+                cameraBox.classList.remove('hand-present');
+                liveDetection.classList.remove('visible');
+            }
         });
 
-        // --- NUEVA LÓGICA PARA EL BOTÓN ---
-        // Añadir un "event listener" para el clic en el botón
-        clearButton.addEventListener('click', function() {
-            // Cuando se haga clic, emitir el evento 'clear_text' al servidor
-            socket.emit('clear_text');
-            console.log('Señal de borrado enviada al servidor.');
+        socket.on('status_update', function(data) {
+            if (data.letter) {
+                liveDetection.innerText = `Detectando: ${data.letter.toUpperCase()} (${Math.round(data.confidence * 100)}%)`;
+                liveDetection.classList.add('visible');
+            } else {
+                liveDetection.classList.remove('visible');
+            }
         });
-        // --- FIN DE LA NUEVA LÓGICA ---
 
+        socket.on('career_detected', function(data) {
+            const letter = data.letter.toUpperCase();
+            if (CAREERS[letter]) {
+                showDetailView(letter);
+            }
+        });
+
+        // --- Funciones de Transición de Vistas ---
+        function showDetailView(letter) {
+            const career = CAREERS[letter];
+            if (!career) return;
+
+            // Inyectar datos en la UI
+            document.getElementById('career-letter').innerText = letter;
+            document.getElementById('career-name').innerText = career.name;
+            document.getElementById('career-faculty').innerText = career.faculty;
+            document.getElementById('career-desc').innerText = career.description;
+            document.getElementById('career-duration').innerText = career.duration;
+            
+            // Aplicar colores de gradiente a los acentos
+            document.getElementById('career-letter').style.borderColor = 'var(--cyan-neon)';
+            document.getElementById('career-card').style.border = '1px solid var(--card-border)';
+
+            // Tags
+            const tagsContainer = document.getElementById('career-tags');
+            tagsContainer.innerHTML = '';
+            career.tags.forEach(tag => {
+                const pill = document.createElement('span');
+                pill.className = 'tag-pill';
+                pill.innerText = tag;
+                tagsContainer.appendChild(pill);
+            });
+
+            // Transición CSS Horizontal
+            mainView.classList.add('hidden-left');
+            detailView.classList.remove('hidden-right');
+
+            isDetailActive = true;
+            startInactivityTimer();
+        }
+
+        function showMainView() {
+            stopInactivityTimer();
+            isDetailActive = false;
+            
+            // Regresar vistas
+            mainView.classList.remove('hidden-left');
+            detailView.classList.add('hidden-right');
+        }
+
+        // --- Funciones de Simulación ---
+        function simulateLetter(letter) {
+            socket.emit('simulate_detection', { letter: letter });
+        }
+
+        // --- Gestión del Temporizador de Inactividad (30 seg) ---
+        function startInactivityTimer() {
+            stopInactivityTimer();
+            inactivitySeconds = 30;
+            
+            const timerSecondsSpan = document.getElementById('timer-seconds');
+            const timerProgress = document.getElementById('timer-progress');
+            
+            timerSecondsSpan.innerText = inactivitySeconds;
+            timerProgress.style.transition = 'none';
+            timerProgress.style.width = '100%';
+            
+            // Forzar reflow para reiniciar la animación CSS
+            timerProgress.offsetHeight;
+            timerProgress.style.transition = 'width 30s linear';
+            timerProgress.style.width = '0%';
+
+            inactivityInterval = setInterval(() => {
+                inactivitySeconds--;
+                timerSecondsSpan.innerText = inactivitySeconds;
+
+                if (inactivitySeconds <= 0) {
+                    showMainView();
+                }
+            }, 1000);
+        }
+
+        function stopInactivityTimer() {
+            if (inactivityInterval) {
+                clearInterval(inactivityInterval);
+                inactivityInterval = null;
+            }
+        }
+
+        function resetInactivityTimer() {
+            if (isDetailActive) {
+                // Si la pantalla de detalles está activa, reiniciar el contador
+                startInactivityTimer();
+            }
+        }
     </script>
-
 </body>
 </html>
