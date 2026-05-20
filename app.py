@@ -14,6 +14,12 @@ import sys
 import os
 import re
 
+import engineio.async_drivers.threading
+import sklearn
+import sklearn.pipeline
+import sklearn.preprocessing
+import sklearn.svm
+
 # --- Resolución de Rutas para PyInstaller ---
 def resource_path(relative_path):
     """Obtiene la ruta absoluta de un recurso, compatible con desarrollo y empaquetado EXE."""
@@ -27,7 +33,7 @@ def resource_path(relative_path):
 # Inicializar Flask con ruta de plantillas dinámica
 app = Flask(__name__, template_folder=resource_path("templates"))
 app.config['SECRET_KEY'] = 'totem_secret_key_2025'
-socketio = SocketIO(app, cors_allowed_origins="*")
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
 
 # --- Rutas de Modelos ---
 MODEL_PATH = Path(resource_path("models/lsb_alpha.joblib"))
@@ -261,5 +267,5 @@ if __name__ == '__main__':
     load_models()
     # Iniciar el hilo de fondo para procesamiento de video e IA
     thread = socketio.start_background_task(target=background_thread)
-    # Ejecutar en localhost puerto 5000
-    socketio.run(app, host='127.0.0.1', port=5000, debug=False, use_reloader=False)
+    # Ejecutar en localhost puerto 5000 con soporte para Werkzeug en modo threading
+    socketio.run(app, host='127.0.0.1', port=5000, debug=False, use_reloader=False, allow_unsafe_werkzeug=True)
