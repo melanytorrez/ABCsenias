@@ -71,12 +71,12 @@ def process_frame(frame, buffer, prev_feats, motion_hist, clf_static, clf_seq):
                 conf = np.max(proba)
                 if conf >= 0.4:
                     pred = clf_seq.classes_[np.argmax(proba)]
-                    msg = f"[D] {pred} ({conf:.2f})"
+                    msg = f"[D] {pred.upper()} ({conf:.2f})"
         else:
             X = feats.reshape(1, -1)
             proba = clf_static.predict_proba(X)[0]
             pred = clf_static.classes_[np.argmax(proba)]
             conf = np.max(proba)
-            msg = f"[E] {pred} ({conf:.2f})"
+            msg = f"[E] {pred.upper()} ({conf:.2f})"
     
     return frame, msg, feats, hand_detected
