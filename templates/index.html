@@ -263,183 +263,224 @@
             box-shadow: 0 0 15px var(--cyan-neon-glow);
         }
 
-        /* --- VISTA DE DETALLE (RESULTADOS) --- */
+        /* --- VISTA DE DETALLE (RESULTADOS ESTILO APK) --- */
         .detail-view {
-            padding: 50px 30px 40px 30px;
+            padding: 30px 24px 20px 24px !important;
+            justify-content: flex-start !important;
+            gap: 24px;
         }
 
-        .letter-badge-container {
-            margin-top: 30px;
+        .detail-header {
             display: flex;
-            justify-content: center;
+            align-items: center;
+            gap: 18px;
+            width: 100%;
+            max-width: 600px;
+            margin-top: 15px;
+            padding: 0 5px;
         }
 
-        .letter-badge {
-            width: 130px;
-            height: 130px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--bg-color), var(--card-bg));
-            border: 3px solid var(--cyan-neon);
+        .detail-letter-box {
+            width: 76px;
+            height: 76px;
+            border-radius: 20px;
+            background: linear-gradient(135deg, #2979FF, #1565C0);
+            box-shadow: 0 8px 24px rgba(41, 121, 255, 0.35);
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 64px;
+            font-size: 38px;
             font-weight: 800;
-            color: var(--cyan-neon);
-            box-shadow: 0 0 30px var(--cyan-neon-glow);
+            color: white;
+            flex-shrink: 0;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        .faculty-badge {
-            background-color: rgba(0, 229, 255, 0.1);
-            border: 1px solid rgba(0, 229, 255, 0.3);
-            color: var(--cyan-neon);
-            padding: 8px 20px;
-            border-radius: 50px;
-            font-size: 13px;
-            font-weight: 700;
-            letter-spacing: 1px;
+        .detail-header-text {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .detail-detected-label {
+            font-size: 11px;
+            font-weight: 800;
+            color: #10B981;
+            letter-spacing: 2px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
             text-transform: uppercase;
-            margin-top: 20px;
-            text-align: center;
         }
 
-        /* Info Card de Carrera */
+        .green-dot {
+            width: 7px;
+            height: 7px;
+            background-color: #10B981;
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 8px #10B981;
+        }
+
+        .detail-header-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: white;
+            margin: 0;
+            line-height: 1.2;
+            text-align: left;
+        }
+
+        /* APK Card */
         .info-card {
             width: 100%;
             max-width: 600px;
-            background: linear-gradient(185deg, var(--card-bg), rgba(22, 29, 48, 0.8));
-            border: 1px solid var(--card-border);
-            border-radius: 30px;
-            padding: 35px 30px;
-            margin: 25px 0;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+            background: linear-gradient(180deg, rgba(22, 29, 48, 0.95), rgba(15, 20, 35, 0.95));
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 28px;
+            padding: 35px 28px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.6);
             display: flex;
             flex-direction: column;
             gap: 20px;
-            flex-grow: 1;
-            justify-content: center;
+            flex-grow: 0 !important;
+            text-align: left;
         }
 
-        .info-card h2 {
-            font-size: 28px;
+        .card-faculty-small {
+            font-size: 11px;
             font-weight: 800;
+            color: #38BDF8;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .card-title {
+            font-size: 26px;
+            font-weight: 700;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 0;
             line-height: 1.2;
-            text-align: center;
+        }
+
+        .cap-emoji {
+            font-size: 26px;
         }
 
         .info-card .description {
-            font-size: 16px;
-            line-height: 1.6;
-            color: var(--text-secondary);
-            text-align: center;
+            font-size: 15px;
+            line-height: 1.65;
+            color: #94A3B8;
+            text-align: left !important;
         }
 
-        .info-card .details-row {
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            border-top: 1px solid var(--card-border);
-            border-bottom: 1px solid var(--card-border);
-            padding: 15px 0;
-            margin: 5px 0;
-        }
-
-        .detail-item {
-            text-align: center;
-        }
-
-        .detail-item .label {
-            font-size: 11px;
-            color: var(--text-muted);
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            margin-bottom: 4px;
-        }
-
-        .detail-item .val {
-            font-size: 16px;
-            font-weight: 700;
-            color: var(--cyan-neon);
-        }
-
-        /* Tags/Píldoras */
+        /* Tags Container */
         .tags-container {
             display: flex;
             flex-wrap: wrap;
-            justify-content: center;
             gap: 10px;
+            justify-content: flex-start !important;
+            margin: 5px 0;
         }
 
         .tag-pill {
-            background-color: var(--card-border);
-            color: var(--text-secondary);
+            background-color: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: #CBD5E1;
             font-size: 13px;
             font-weight: 600;
-            padding: 6px 16px;
+            padding: 8px 20px;
             border-radius: 50px;
+            transition: all 0.2s ease;
         }
 
-        /* Barra del temporizador de inactividad */
+        /* Metadata list */
+        .card-metadata-list {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            padding-top: 22px;
+            margin-top: 5px;
+        }
+
+        .metadata-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 14px;
+            color: #94A3B8;
+            font-weight: 500;
+        }
+
+        .meta-icon {
+            font-size: 18px;
+        }
+
+        /* Timer de Inactividad */
         .timer-container {
             width: 100%;
-            max-width: 450px;
+            max-width: 600px;
             text-align: center;
-            margin-bottom: 20px;
+            margin: 15px 0;
+            padding: 0 10px;
         }
 
         .timer-text {
             font-size: 13px;
-            color: var(--text-muted);
+            color: #64748B;
             margin-bottom: 10px;
         }
 
         .timer-text span {
-            color: var(--cyan-neon);
+            color: #00E5FF;
             font-weight: 600;
         }
 
         .progress-bar-bg {
             width: 100%;
             height: 6px;
-            background-color: var(--card-border);
+            background-color: rgba(255,255,255,0.05);
             border-radius: 10px;
             overflow: hidden;
         }
 
         .progress-bar-fill {
             height: 100%;
-            width: 100%;
-            background: linear-gradient(90deg, var(--cyan-neon), #2962FF);
+            background: linear-gradient(90deg, #00E5FF, #2962FF);
             border-radius: 10px;
             width: 100%;
             transition: width 1s linear;
         }
 
-        /* Botón de Retorno */
-        .back-btn {
+        /* Botón APK "Explorar otra carrera" */
+        .back-btn-apk {
             width: 100%;
-            max-width: 450px;
-            padding: 16px;
+            max-width: 600px;
+            padding: 18px;
             border-radius: 20px;
-            background: linear-gradient(135deg, var(--btn-blue), rgba(13, 71, 161, 0.8));
-            border: 1px solid rgba(0, 229, 255, 0.3);
+            background: linear-gradient(90deg, #2979FF, #AA00FF);
+            border: none;
             color: white;
-            font-size: 16px;
+            font-size: 17px;
             font-weight: 700;
             cursor: pointer;
-            transition: all 0.2s ease;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 8px 25px rgba(170, 0, 255, 0.25);
             display: flex;
             justify-content: center;
             align-items: center;
             gap: 10px;
+            margin-top: 10px;
         }
 
-        .back-btn:active {
+        .back-btn-apk:active {
             transform: scale(0.97);
-            box-shadow: 0 0 10px var(--cyan-neon-glow);
-            background: var(--cyan-neon);
-            color: var(--bg-color);
+            box-shadow: 0 0 15px rgba(170, 0, 255, 0.5);
+            opacity: 0.95;
         }
 
         /* Animación de Pulso */
@@ -495,50 +536,56 @@
         </div>
 
         <!-- VISTA 2: DETALLE DE CARRERA -->
-        <div class="view-container hidden-right" id="detail-view">
-            <!-- Badge de Letra -->
-            <div class="letter-badge-container">
-                <div class="letter-badge" id="career-letter">C</div>
-            </div>
-            
-            <div class="faculty-badge" id="career-faculty">FACULTAD DE CIENCIAS</div>
-
-            <!-- Tarjeta de Información -->
-            <div class="info-card" id="career-card">
-                <h2 id="career-name">Comunicación Social</h2>
-                <div class="description" id="career-desc">
-                    Descripción detallada de la carrera seleccionada.
+        <div class="view-container hidden-right detail-view" id="detail-view">
+            <!-- Header de la Vista de Detalle (Estilo APK) -->
+            <div class="detail-header">
+                <div class="detail-letter-box" id="detail-letter-badge">A</div>
+                <div class="detail-header-text">
+                    <div class="detail-detected-label">
+                        <span class="green-dot"></span> LETRA DETECTADA
+                    </div>
+                    <h1 class="detail-header-title" id="detail-header-title">Administración de Empresas</h1>
                 </div>
+            </div>
+
+            <!-- Tarjeta de Información (Estilo APK) -->
+            <div class="info-card" id="career-card">
+                <div class="card-faculty-small" id="career-faculty-small">CIENCIAS ECONÓMICAS Y FINANCIERAS</div>
+                <h2 class="card-title">
+                    <span class="cap-emoji">🎓</span> <span id="career-name">Administración de Empresas</span>
+                </h2>
                 
-                <div class="details-row">
-                    <div class="detail-item">
-                        <div class="label">Duración</div>
-                        <div class="val" id="career-duration">4 Años</div>
-                    </div>
-                    <div class="detail-item">
-                        <div class="label">Régimen</div>
-                        <div class="val">Semestral</div>
-                    </div>
+                <div class="description" id="career-desc">
+                    Descripción de la carrera.
                 </div>
 
                 <div class="tags-container" id="career-tags">
                     <!-- Dinámico -->
                 </div>
+
+                <div class="card-metadata-list">
+                    <div class="metadata-item">
+                        <span class="meta-icon">⏱️</span> Duración: <span id="career-duration">4 años</span>
+                    </div>
+                    <div class="metadata-item">
+                        <span class="meta-icon">📚</span> <span id="career-faculty-bottom">Ciencias Económicas y Financieras</span>
+                    </div>
+                </div>
             </div>
 
             <!-- Temporizador de Inactividad -->
-            <div class="timer-container">
+            <div class="timer-container" style="margin-top: auto;">
                 <div class="timer-text">
-                    La pantalla se cerrará en <span id="timer-seconds">30</span> segundos
+                    La pantalla volverá al inicio en <span id="timer-seconds">30</span> segundos
                 </div>
                 <div class="progress-bar-bg">
                     <div class="progress-bar-fill" id="timer-progress"></div>
                 </div>
             </div>
 
-            <!-- Botón Volver -->
-            <button class="back-btn" onclick="showMainView()">
-                <span>←</span> Volver a la Cámara
+            <!-- Botón Volver (Estilo APK "Explorar otra carrera") -->
+            <button class="back-btn-apk" onclick="showMainView()">
+                🔍 Explorar otra carrera
             </button>
         </div>
 
@@ -659,16 +706,15 @@
             const career = CAREERS[letter];
             if (!career) return;
 
-            // Inyectar datos en la UI
-            document.getElementById('career-letter').innerText = letter;
+            // Inyectar datos en la UI (Estilo APK)
+            document.getElementById('detail-letter-badge').innerText = letter;
+            document.getElementById('detail-letter-badge').style.background = career.gradient || 'linear-gradient(135deg, #2979FF, #1565C0)';
+            document.getElementById('detail-header-title').innerText = career.name;
+            document.getElementById('career-faculty-small').innerText = career.faculty.toUpperCase();
             document.getElementById('career-name').innerText = career.name;
-            document.getElementById('career-faculty').innerText = career.faculty;
             document.getElementById('career-desc').innerText = career.description;
             document.getElementById('career-duration').innerText = career.duration;
-            
-            // Aplicar colores de gradiente a los acentos
-            document.getElementById('career-letter').style.borderColor = 'var(--cyan-neon)';
-            document.getElementById('career-card').style.border = '1px solid var(--card-border)';
+            document.getElementById('career-faculty-bottom').innerText = career.faculty;
 
             // Tags
             const tagsContainer = document.getElementById('career-tags');
